@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const ProductType = require("../models/productType");
 const Auth = require("../middleware/auth");
 const UserAuth = require("../middleware/user");
@@ -8,7 +9,7 @@ const Admin = require("../middleware/admin");
 router.post("/createProductType", Auth, UserAuth, Admin, async (req, res) => {
   if (!req.body.name || !req.body.description)
     return res.status(400).send("Process failed: Incomplete data");
-  let prodType = await ProductType.find({ name: req.body.name });
+  let prodType = await ProductType.findOne({ name: req.body.name });
   if (prodType)
     return res
       .status(400)
@@ -51,14 +52,15 @@ router.put("/updateProductType", Auth, UserAuth, Admin, async (req, res) => {
   if (
     !req.body._id ||
     !req.body.name ||
-    !req.body.description ||
-    !req.body.active
+    !req.body.description
   )
     return res.status(400).send("Process failed: Incomplete data");
+  const validId =  mongoose.Types.ObjectId.isValid(req.body._id);
+  if (!validId) return res.status(400).send("Process failed: Invalid product type Id");
   const productType = await ProductType.findByIdAndUpdate(req.body._id, {
     name: req.body.name,
     description: req.body.description,
-    active: req.body.active,
+    active: true,
   });
   if (!productType)
     return res.status(400).send("Process failed: error editing Product Type");
@@ -69,11 +71,12 @@ router.put("/deleteProductType", Auth, UserAuth, Admin, async (req, res) => {
   if (
     !req.body._id ||
     !req.body.name ||
-    !req.body.description ||
-    !req.body.active
+    !req.body.description
   )
     return res.status(400).send("Process failed: Incomplete data");
-  const productType = await ProductType.findByIdAndUpdate(req.body._id, {
+    const validId =  mongoose.Types.ObjectId.isValid(req.body._id);
+    if (!validId) return res.status(400).send("Process failed: Invalid product type Id");
+    const productType = await ProductType.findByIdAndUpdate(req.body._id, {
     name: req.body.name,
     description: req.body.description,
     active: false,

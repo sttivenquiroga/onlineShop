@@ -73,22 +73,22 @@ router.put("/updateSale", Auth, UserAuth, Admin, async (req, res) => {
 router.put("/deleteSale", Auth, UserAuth, Admin, async (req, res) => {
   if (
     !req.body._id ||
-    !req.body.clientId ||
-    !req.body.sellerId ||
+    !req.body.providerId ||
+    !req.body.buyerId ||
     !req.body.totalPrice
   )
     return res.status(400).send("Process failed: Incomplete data");
   let validId = mongoose.Types.ObjectId.isValid(req.body._id);
   if (!validId) return res.status(400).send("Process failed: Invalid sale Id");
-  validId = mongoose.Types.ObjectId.isValid(req.body.clientId);
+  validId = mongoose.Types.ObjectId.isValid(req.body.providerId);
   if (!validId)
     return res.status(400).send("Process failed: Invalid client Id");
-  validId = mongoose.Types.ObjectId.isValid(req.body.sellerId);
+  validId = mongoose.Types.ObjectId.isValid(req.body.buyerId);
   if (!validId)
     return res.status(400).send("Process failed: Invalid seller Id");
   const sale = await Sale.findByIdAndUpdate(req.body._id, {
-    clientId: req.body.clientId,
-    sellerId: req.body.sellerId,
+    providerId: req.body.providerId,
+    buyerId: req.body.buyerId,
     totalPrice: req.body.totalPrice,
     status: "void",
   });

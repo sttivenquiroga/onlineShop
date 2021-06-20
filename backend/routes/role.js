@@ -8,7 +8,7 @@ const Admin = require("../middleware/admin");
 router.post("/createRole", Auth, UserAuth, Admin, async (req, res) => {
   if (!req.body.name || !req.body.description)
     return res.status(400).send("Process failed: Incomplete data");
-  let role = await Role.find({ name: req.body.name });
+  let role = await Role.findOne({ name: req.body.name });
   if (role)
     return res
       .status(400)

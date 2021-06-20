@@ -4,11 +4,12 @@ const DocType = require("../models/documentType");
 const Auth = require("../middleware/auth");
 const UserAuth = require("../middleware/user");
 const Admin = require("../middleware/admin");
+const mongoose = require("mongoose");
 
 router.post("/createDocumentType", Auth, UserAuth, Admin, async (req, res) => {
   if (!req.body.name || !req.body.description)
     return res.status(400).send("Process failed: Incomplete data");
-  let doctype = await DocType.find({ name: req.body.name });
+  let doctype = await DocType.findOne({ name: req.body.name });
   if (doctype)
     return res
       .status(400)
@@ -24,7 +25,7 @@ router.post("/createDocumentType", Auth, UserAuth, Admin, async (req, res) => {
       return res
         .status(400)
         .send("Process failed: Error creating Document Type");
-    return res.status(200).send({ result });
+    return res.status(200).send("Process successful: Document type saved");
   } catch (e) {
     return res.status(400).send("Process failed: Error creating Document Type");
   }
@@ -48,6 +49,9 @@ router.get(
 router.put("/updateDocumentType", Auth, UserAuth, Admin, async (req, res) => {
   if (!req.body._id || !req.body.name || !req.body.description)
     return res.status(400).send("Process failed: Incomplete data");
+  const validId = mongoose.Types.ObjectId.isValid(req.body._id);
+  if (!validId)
+    return res.status(400).send("Process failed: Invalid document type Id");
   const doctype = await DocType.findByIdAndUpdate(req.body._id, {
     name: req.body.name,
     description: req.body.description,
@@ -61,6 +65,9 @@ router.put("/updateDocumentType", Auth, UserAuth, Admin, async (req, res) => {
 router.put("/deleteDocumentType", Auth, UserAuth, Admin, async (req, res) => {
   if (!req.body._id || !req.body.name || !req.body.description)
     return res.status(400).send("Process failed: Incomplete data");
+  const validId = mongoose.Types.ObjectId.isValid(req.body._id);
+  if (!validId)
+    return res.status(400).send("Process failed: Invalid document type Id");
   const doctype = await DocType.findByIdAndUpdate(req.body._id, {
     name: req.body.name,
     description: req.body.description,

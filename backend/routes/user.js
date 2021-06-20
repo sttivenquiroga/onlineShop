@@ -29,7 +29,7 @@ router.post("/registerClient", async (req, res) => {
   user = await User.findOne({ email: req.body.email });
   if (user)
     return res.status(400).send("Process failed: Email is already registered");
-  let doctype = await DocType.findOne({ name: req.body.documentTypeId });
+  let doctype = await DocType.findOne({_id: req.body.documentTypeId });
   if (!doctype)
     return res.status(400).send("Process failed: Document type not found");
   const role = await Role.findOne({ name: "user" });
@@ -82,7 +82,7 @@ router.post("/registerUsers", Auth, UserAuth, Admin, async (req, res) => {
     return res.status(400).send("Process failed: Email is already registered");
   const validRole = mongoose.Types.ObjectId.isValid(req.body.roleId);
   if (!validRole) return res.status(400).send("Process failed: Invalid roleId");
-  const docType = await DocType.findOne({ name: req.body.documentTypeId });
+  const docType = await DocType.findOne({ _id: req.body.documentTypeId });
   if (!docType)
     return res.status(400).send("Process failed: Document type not found");
   const hash = await bcrypt.hash(req.body.password, 10);
@@ -129,12 +129,13 @@ router.put("/updateUser", Auth, UserAuth, Admin, async (req, res) => {
     !req.body.documentTypeId ||
     !req.body.idNumber ||
     !req.body.phone ||
-    !req.body.address
+    !req.body.address ||
+    !req.body.active
   )
     return res.status(400).send("Process failed: Incomplete data");
   const validRole = mongoose.Types.ObjectId.isValid(req.body.roleId);
   if (!validRole) return res.status(400).send("Process failed: Invalid roleId");
-  const docType = await DocType.findOne({ name: req.body.documentTypeId });
+  const docType = await DocType.findOne({ _id: req.body.documentTypeId });
   if (!docType)
     return res.status(400).send("Process failed: Document type not found");
   const hash = await bcrypt.hash(req.body.password, 10);
@@ -148,7 +149,7 @@ router.put("/updateUser", Auth, UserAuth, Admin, async (req, res) => {
     idNumber: req.body.idNumber,
     phone: req.body.phone,
     address: req.body.address,
-    active: true,
+    active: req.body.active,
   });
   if (!user) return res.status(400).send("Process failed: Error editing user");
   return res.status(200).send({ user });
@@ -170,7 +171,7 @@ router.put("/deleteUser", Auth, UserAuth, Admin, async (req, res) => {
     return res.status(400).send("Process failed: Incomplete data");
   const validRole = mongoose.Types.ObjectId.isValid(req.body.roleId);
   if (!validRole) return res.status(400).send("Process failed: Invalid roleId");
-  const docType = await DocType.findOne({ name: req.body.documentTypeId });
+  const docType = await DocType.findOne({ _id: req.body.documentTypeId });
   if (!docType)
     return res.status(400).send("Process failed: Document type not found");
   const hash = await bcrypt.hash(req.body.password, 10);

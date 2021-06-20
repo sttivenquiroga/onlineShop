@@ -15,7 +15,7 @@ router.post("/createProduct", Auth, UserAuth, Admin, async (req, res) => {
     !req.body.salePrice
   )
     return res.status(400).send("Process failed: Incomplete data");
-  let product = await Product.find({ name: rea.body.name });
+  let product = await Product.findOne({ name: req.body.name });
   if (product)
     return res
       .status(400)
@@ -63,14 +63,17 @@ router.put("/updateProduct", Auth, UserAuth, Admin, async (req, res) => {
     !req.body.salePrice
   )
     return res.status(400).send("Process failed: Incomplete data");
-  let product = await Product.find({ name: req.body.name });
-  if (product && req.body._id !== product._id)
+  let validId = mongoose.Types.ObjectId.isValid(req.body._id);
+  if (!validId)
+    return res.status(400).send("Process failed: Invalid product Id");
+  validId = mongoose.Types.ObjectId.isValid(req.body.productTypeId);
+  if (!validId)
+    return res.status(400).send("Process failed: Invalid product type Id");
+  let product = await Product.findOne({ name: req.body.name });
+  if (product && req.body._id != product._id)
     return res
       .status(400)
       .send("Process failed: The product is already registered");
-  const validId = mongoose.Types.ObjectId.isValid(req.body.productTypeId);
-  if (!validId)
-    return res.status(400).send("Process failed: Invalid product type Id");
   product = await Product.findByIdAndUpdate(req.body._id, {
     name: req.body.name,
     productTypeId: req.body.productTypeId,
@@ -94,14 +97,17 @@ router.put("/deleteProduct", Auth, UserAuth, Admin, async (req, res) => {
     !req.body.salePrice
   )
     return res.status(400).send("Process failed: Incomplete data");
-  let product = await Product.find({ name: req.body.name });
-  if (product && req.body._id !== product._id)
+  let validId = mongoose.Types.ObjectId.isValid(req.body._id);
+  if (!validId)
+    return res.status(400).send("Process failed: Invalid product Id");
+  validId = mongoose.Types.ObjectId.isValid(req.body.productTypeId);
+  if (!validId)
+    return res.status(400).send("Process failed: Invalid product type Id");
+  let product = await Product.findOne({ name: req.body.name });
+  if (product && req.body._id != product._id)
     return res
       .status(400)
       .send("Process failed: The product is already registered");
-  const validId = mongoose.Types.ObjectId.isValid(req.body.productTypeId);
-  if (!validId)
-    return res.status(400).send("Process failed: Invalid product type Id");
   product = await Product.findByIdAndUpdate(req.body._id, {
     name: req.body.name,
     productTypeId: req.body.productTypeId,
@@ -112,7 +118,7 @@ router.put("/deleteProduct", Auth, UserAuth, Admin, async (req, res) => {
   });
   if (!product)
     return res.status(400).send("Process failed: Error deleting product");
-  return res.status(200).send({ product });
+  return res.status(200).send("Process successful: Product deleted");
 });
 
 module.exports = router;
