@@ -5,24 +5,23 @@ const mongoose = require("mongoose");
 const Auth = require("../middleware/auth");
 const UserAuth = require("../middleware/user");
 const Admin = require("../middleware/admin");
+const Employee = require("../middleware/employee");
+const Provider = require("../middleware/provider");
 
-router.post("/createPurchase", Auth, UserAuth, async (req, res) => {
-  if (!req.body.providerId || !req.body.buyerId || !req.body.totalPrice)
+router.post("/createPurchase", Auth, UserAuth, Employee, async (req, res) => {
+  if (!req.body.providerId || !req.body.totalPrice)
     return res.status(400).send("Process failed: Incomplete data");
-  let validId = mongoose.Types.ObjectId.isValid(req.body.providerId);
+  const validId = mongoose.Types.ObjectId.isValid(req.body.providerId);
   if (!validId)
     return res.status(400).send("Process failed: Invalid client Id");
-  validId = mongoose.Types.ObjectId.isValid(req.body.buyerId);
-  if (!validId)
-    return res.status(400).send("Process failed: Invalid seller Id");
   const purchase = new Purchase({
     providerId: req.body.providerId,
-    buyerId: req.body.buyerId,
+    buyerId: req.user._id,
     totalPrice: req.body.totalPrice,
-    status: "efective",
+    accepted: false,
   });
   try {
-    const result = await sale.save();
+    const result = await purchase.save();
     if (!result)
       return res.status(400).send("Process failed: Error creating purchase");
     return res.status(200).send({ result });
@@ -32,45 +31,50 @@ router.post("/createPurchase", Auth, UserAuth, async (req, res) => {
   }
 });
 
-router.get("/listSale/:_id?", Auth, UserAuth, Admin, async (req, res) => {
-  const sales = await Sale.find({ _id: new RegExp(req.params["_id"], "i") })
+router.get("/listPurchaseAdmin", Auth, UserAuth, Admin, async (req, res) => {
+  const purchases = await Purchase.find()
     .populate("providerId", "name")
     .populate("buyerId", "name")
     .exec();
-  if (!sales)
+  if (!purchases)
     return res.status(400).send("Process failed: Not purchases found");
-  return res.status(200).send({ sales });
+  return res.status(200).send({ purchases });
 });
 
-router.put("/updateSale", Auth, UserAuth, Admin, async (req, res) => {
+router.get("/listPurchase", Auth, UserAuth, Provider, async (req, res) => {
+  const purchases = await Purchase.find({ providerId: req.user._id })
+    .populate("providerId", "name")
+    .populate("buyerId", "name")
+    .exec();
+  if (!purchases)
+    return res.status(400).send("Process failed: Not purchases found");
+  return res.status(200).send({ purchases });
+});
+
+router.put("/updatePurchase", Auth, UserAuth, Employee, async (req, res) => {
   if (
     !req.body._id ||
     !req.body.providerId ||
-    !req.body.buyerId ||
-    !req.body.totalPrice ||
-    !req.body.status
+    !req.body.totalPrice
   )
     return res.status(400).send("Process failed: Incomplete data");
   let validId = mongoose.Types.ObjectId.isValid(req.body._id);
-  if (!validId) return res.status(400).send("Process failed: Invalid sale Id");
+  if (!validId) return res.status(400).send("Process failed: Invalid purchase Id");
   validId = mongoose.Types.ObjectId.isValid(req.body.providerId);
   if (!validId)
     return res.status(400).send("Process failed: Invalid client Id");
-  validId = mongoose.Types.ObjectId.isValid(req.body.buyerId);
-  if (!validId)
-    return res.status(400).send("Process failed: Invalid seller Id");
-  const sale = await Sale.findByIdAndUpdate(req.body._id, {
+  const purchase = await Purchase.findByIdAndUpdate(req.body._id, {
     providerId: req.body.providerId,
-    buyerId: req.body.buyerId,
+    buyerId: req.user._id,
     totalPrice: req.body.totalPrice,
-    status: req.body.status,
+    accepted: false,
   });
-  if (!sale)
+  if (!purchase)
     return res.status(400).send("Process failed: Error editing purchase");
-  return res.status(200).send({ sale });
+  return res.status(200).send({ purchase });
 });
 
-router.put("/deleteSale", Auth, UserAuth, Admin, async (req, res) => {
+router.put("/acceptPurchaseProvider", Auth, UserAuth, Provider, async (req, res) => {
   if (
     !req.body._id ||
     !req.body.providerId ||
@@ -79,21 +83,48 @@ router.put("/deleteSale", Auth, UserAuth, Admin, async (req, res) => {
   )
     return res.status(400).send("Process failed: Incomplete data");
   let validId = mongoose.Types.ObjectId.isValid(req.body._id);
-  if (!validId) return res.status(400).send("Process failed: Invalid sale Id");
+  if (!validId) return res.status(400).send("Process failed: Invalid purchase Id");
   validId = mongoose.Types.ObjectId.isValid(req.body.providerId);
   if (!validId)
     return res.status(400).send("Process failed: Invalid client Id");
   validId = mongoose.Types.ObjectId.isValid(req.body.buyerId);
   if (!validId)
     return res.status(400).send("Process failed: Invalid seller Id");
-  const sale = await Sale.findByIdAndUpdate(req.body._id, {
+  const purchase = await Purchase.findByIdAndUpdate(req.body._id, {
     providerId: req.body.providerId,
     buyerId: req.body.buyerId,
     totalPrice: req.body.totalPrice,
-    status: "void",
+    accepted: true,
   });
-  if (!sale) return res.status(400).send("Process failed: Error editing sale");
-  return res.status(200).send({ sale });
+  if (!purchase)
+    return res.status(400).send("Process failed: Error editing purchase");
+  return res.status(200).send({ purchase });
+});
+
+router.put("/deletePurchase", Auth, UserAuth, Employee, async (req, res) => {
+  if (
+    !req.body._id ||
+    !req.body.providerId ||
+    !req.body.buyerId ||
+    !req.body.totalPrice
+  )
+    return res.status(400).send("Process failed: Incomplete data");
+  let validId = mongoose.Types.ObjectId.isValid(req.body._id);
+  if (!validId) return res.status(400).send("Process failed: Invalid purchase Id");
+  validId = mongoose.Types.ObjectId.isValid(req.body.providerId);
+  if (!validId)
+    return res.status(400).send("Process failed: Invalid client Id");
+  validId = mongoose.Types.ObjectId.isValid(req.body.buyerId);
+  if (!validId)
+    return res.status(400).send("Process failed: Invalid seller Id");
+  const purchase = await Purchase.findByIdAndUpdate(req.body._id, {
+    providerId: req.body.providerId,
+    buyerId: req.body.buyerId,
+    totalPrice: req.body.totalPrice,
+    accepted: false,
+  });
+  if (!purchase) return res.status(400).send("Process failed: Error editing sale");
+  return res.status(200).send({ purchase });
 });
 
 module.exports = router;

@@ -5,6 +5,7 @@ const detailPurchSchema = new mongoose.Schema({
   productId: { type: mongoose.Schema.ObjectId, ref: "product" },
   amount: Number,
   price: Number,
+  acepted: String,
   date: { type: Date, default: Date.now },
 });
 const detailPurchase = mongoose.model("detailPurchase", detailPurchSchema);

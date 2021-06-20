@@ -2,9 +2,8 @@ const mongoose = require("mongoose");
 
 const saleSchema = new mongoose.Schema({
   clientId: { type: mongoose.Schema.ObjectId, ref: "user" },
-  sellerId: { type: mongoose.Schema.ObjectId, ref: "user" },
   totalPrice: Number,
-  status: String,
+  accepted: Boolean,
   date: { type: Date, default: Date.now },
 });
 

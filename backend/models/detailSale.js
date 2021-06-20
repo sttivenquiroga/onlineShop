@@ -5,6 +5,7 @@ const detailSaleSchema = new mongoose.Schema({
   productId: { type: mongoose.Schema.ObjectId, ref: "product" },
   amount: Number,
   price: Number,
+  acepted: Boolean,
   data: { type: Date, default: Date.now },
 });
 

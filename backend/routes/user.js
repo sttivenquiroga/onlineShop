@@ -32,7 +32,7 @@ router.post("/registerClient", async (req, res) => {
   let doctype = await DocType.findOne({_id: req.body.documentTypeId });
   if (!doctype)
     return res.status(400).send("Process failed: Document type not found");
-  const role = await Role.findOne({ name: "user" });
+  const role = await Role.findOne({ name: "client" });
   if (!role)
     return res.status(400).send("Process failed: No role was assigned");
   const hash = await bcrypt.hash(req.body.password, 10);

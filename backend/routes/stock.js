@@ -6,8 +6,8 @@ const UserAuth = require("../middleware/user");
 const Admin = require("../middleware/admin");
 const mongoose = require("mongoose");
 
-router.post("createStock", Auth, UserAuth, Admin, async (req, res) => {
-  if (!productId || !amount)
+router.post("/createStock", Auth, UserAuth, Admin, async (req, res) => {
+  if (!req.body.productId || !req.body.amount)
     return res.status(400).send("Process failed: Incomplete data");
   const validId = mongoose.Types.ObjectId.isValid(req.body.productId);
   if (!validId)
@@ -34,11 +34,7 @@ router.get(
   UserAuth,
   Admin,
   async (req, res) => {
-    const stocks = await Stock.find({
-      productId: new RegExp(req.params["productId"], "i"),
-    })
-      .populate("productId")
-      .exec();
+    const stocks = await Stock.find().populate("productId").exec();
     if (!stocks) return res.status(400).send("Not products found");
     return res.status(200).send({ stocks });
   }
@@ -47,7 +43,9 @@ router.get(
 router.put("/updateStock", Auth, UserAuth, Admin, async (req, res) => {
   if (!req.body._id || !req.body.productId || !req.body.amount)
     return res.status(400).send("Process failed: Incomplete data");
-  const validId = mongoose.Types.ObjectId.isValid(req.body.productId);
+  let validId = mongoose.Types.ObjectId.isValid(req.body._id);
+  if (!validId) return res.status(200).send("Process failed: Invalid stock Id");
+  validId = mongoose.Types.ObjectId.isValid(req.body.productId);
   if (!validId)
     return res.status(200).send("Process failed: Invalid product Id");
   const stock = await Stock.findByIdAndUpdate(req.body._id, {
@@ -63,7 +61,9 @@ router.put("/updateStock", Auth, UserAuth, Admin, async (req, res) => {
 router.put("/deleteStock", Auth, UserAuth, Admin, async (req, res) => {
   if (!req.body._id || !req.body.productId || !req.body.amount)
     return res.status(400).send("Process failed: Incomplete data");
-  const validId = mongoose.Types.ObjectId.isValid(req.body.productId);
+  let validId = mongoose.Types.ObjectId.isValid(req.body._id);
+  if (!validId) return res.status(200).send("Process failed: Invalid stock Id");
+  validId = mongoose.Types.ObjectId.isValid(req.body.productId);
   if (!validId)
     return res.status(200).send("Process failed: Invalid product Id");
   const stock = await Stock.findByIdAndUpdate(req.body._id, {

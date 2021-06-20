@@ -4,6 +4,7 @@ const purchaseSchema = new mongoose.Schema({
   providerId: { type: mongoose.Schema.ObjectId, ref: "user" },
   buyerId: { type: mongoose.Schema.ObjectId, ref: "user" },
   totalPrice: Number,
+  accepted: Boolean,
   date: { type: Date, default: Date.now },
 });
 
